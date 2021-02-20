@@ -1,0 +1,122 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.AI;
+
+public class SelectAnt : MonoBehaviour
+{
+    List<Transform> selectedAnts = new List<Transform>();
+    public Vector3 mousePosition;
+    public GameObject I;
+
+    Vector3 mousePos1, mousePos2;
+    Vector3 StartPos, EndPos;
+    public RectTransform SelectedBox;
+
+    private void Update()
+    {
+        Debug.Log(SelectedBox.sizeDelta);
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            StartPos = GetComponent<Camera>().WorldToScreenPoint(Input.mousePosition);
+
+            mousePos1 = GetComponent<Camera>().ScreenToViewportPoint(Input.mousePosition);
+
+            RaycastHit[] hits = Physics.RaycastAll(GetComponent<Camera>().ScreenPointToRay(Input.mousePosition));
+
+            if(hits.Length != 0)
+            {
+                for (int i = 0; i < hits.Length; i++)
+                {
+                    
+
+
+                    if (hits[i].collider.tag == "Ant")
+                    {
+                        if (selectedAnts.Count != 0)
+                        {
+                            for (int j = 0; j < selectedAnts.Count; j++)
+                            {
+                                if (hits[i].collider.transform.Equals(selectedAnts[j]))
+                                {
+                                    Debug.Log("Remove");
+                                    selectedAnts.Remove(hits[i].collider.transform);
+                                }
+                                else
+                                {
+                                    Debug.Log("Add");
+                                    selectedAnts.Add(hits[i].collider.transform);
+                                    break;
+                                }
+
+                            }
+                        }
+                        else
+                        {
+                            Debug.Log("Add1");
+                            selectedAnts.Add(hits[i].collider.transform);
+                        }
+
+                    }
+
+                }
+
+            }
+     
+        }
+        if(Input.GetMouseButton(0))
+        {
+            Rect selectRect = new Rect(mousePos1.x, mousePos1.y, mousePos2.x - mousePos1.x, mousePos2.y - mousePos1.x);
+
+            if (selectRect.Contains(GetComponent<Camera>().WorldToViewportPoint(Input.mousePosition)))
+            {
+                Debug.Log("Slected");
+            }
+        }
+        else if(Input.GetMouseButtonUp(0))
+        {
+            mousePos2 = GetComponent<Camera>().ScreenToViewportPoint(Input.mousePosition);
+            EndPos = Input.mousePosition;
+
+            Vector3 BoxStart = GetComponent<Camera>().WorldToScreenPoint(StartPos);
+            BoxStart.z = 0f;
+            Debug.Log("asdasd");
+            Vector3 centre = (BoxStart + EndPos);
+            SelectedBox.position = centre;
+
+            float sizeX = Mathf.Abs(BoxStart.x + EndPos.x);
+            float sizeY = Mathf.Abs(BoxStart.y + EndPos.y);
+
+            SelectedBox.sizeDelta = new Vector2(sizeX, sizeY);
+        }
+
+        else if (Input.GetMouseButtonDown(1))
+        {
+            RaycastHit[] hits = Physics.RaycastAll(GetComponent<Camera>().ScreenPointToRay(Input.mousePosition));
+
+            if (hits.Length != 0)
+            {
+                for (int i = 0; i < hits.Length; i++)
+                {
+
+                    if (hits[i].collider.tag == "Map")
+                    {
+                        for (int j = 0; j < selectedAnts.Count; j++)
+                        {
+                            Debug.Log("Go");
+                            selectedAnts[j].GetComponent<NavMeshAgent>().SetDestination(hits[i].collider.transform.position);
+                        }
+
+                        selectedAnts.Clear();
+                    }
+                }
+            }
+
+        }
+        else if(Input.GetKeyDown(KeyCode.LeftControl))
+        {
+            selectedAnts.Clear();
+        }
+    }
+}
